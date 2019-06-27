@@ -8,15 +8,17 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.support.ui.Select;
 
 public class BookMyRoom {
 	
 	//Global Variables
 	static String browser = "chrome";
 	static String url = "http://roombooking.surrey.sfu.ca/"; 
-	static String roomUrl = "http://roombooking.surrey.åfu.ca/edit_entry.php?area=6&room=42";
+	static String roomUrl = "http://roombooking.surrey.sfu.ca/edit_entry.php?area=6&room=42";
 	static WebDriver driver;
 	static WebElement loginButton, username, password, submit;
+	static WebElement date, description, startTime, endTime, saveButton;
 	
 	//Setting up drivers for different browsers
 	
@@ -71,8 +73,21 @@ public class BookMyRoom {
 		submit.click();
 	}
 	
-	public static void BookRoom() {
+	public static void setRoomBookingVariables() {
 		driver.get(roomUrl);
+		date = driver.findElement(By.id("start_datepicker"));
+		description = driver.findElement(By.name("name"));
+		startTime = driver.findElement(By.id("start_seconds6"));
+		endTime = driver.findElement(By.id("end_seconds6"));
+		saveButton = driver.findElement(By.name("save_button"));
+	}
+	
+	public static void bookRoom(int start) {
+		setRoomBookingVariables();
+		description.sendKeys("group study");
+		new Select(startTime).selectByIndex(start);
+		new Select(endTime).selectByIndex(start + 4);
+		saveButton.submit();
 	}
 	
 	public static void main(String[] args) {
@@ -80,6 +95,8 @@ public class BookMyRoom {
 		openLogin();
 		setLoginVariables();
 		login();
+		bookRoom(0);
+		
 	}
 
 }
