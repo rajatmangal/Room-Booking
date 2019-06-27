@@ -1,10 +1,9 @@
 package booking;
 
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
@@ -15,10 +14,11 @@ public class BookMyRoom {
 	//Global Variables
 	static String browser = "chrome";
 	static String url = "http://roombooking.surrey.sfu.ca/"; 
-	static String roomUrl = "http://roombooking.surrey.sfu.ca/edit_entry.php?area=6&room=42";
+	static String roomUrl;
 	static WebDriver driver;
 	static WebElement loginButton, username, password, submit;
 	static WebElement date, description, startTime, endTime, saveButton;
+	static ArrayList<String> users= new ArrayList<String>();
 	
 	//Setting up drivers for different browsers
 	
@@ -44,6 +44,11 @@ public class BookMyRoom {
 		driver = open(browser);
 		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
 		driver.get(url);
+	}
+	
+	public static void fillArrayList() {
+		
+
 	}
 	
 	public static void openLogin() {
@@ -82,20 +87,43 @@ public class BookMyRoom {
 		saveButton = driver.findElement(By.name("save_button"));
 	}
 	
+	public static void changeCookies(String user) {
+		driver.get(roomUrl);
+		Set<Cookie> ck = driver.manage().getCookies();
+		Date date = ck.iterator().next().getExpiry();
+		driver.manage().deleteAllCookies();
+		Cookie cookie = new Cookie("FAS_MRBS",user,"roombooking.surrey.sfu.ca","/",date);
+		driver.manage().addCookie(cookie);
+	}
+	
 	public static void bookRoom(int start) {
 		setRoomBookingVariables();
+		date.clear();
+		date.sendKeys("07/03/2019");
 		description.sendKeys("group study");
 		new Select(startTime).selectByIndex(start);
-		new Select(endTime).selectByIndex(start + 4);
+		if(start < 28) {
+			new Select(endTime).selectByIndex(start + 4);
+		} else {
+			new Select(endTime).selectByIndex(start + 3);
+		}
+		
 		saveButton.submit();
 	}
 	
 	public static void main(String[] args) {
+		fillArrayList();
 		setupDriver();
 		openLogin();
 		setLoginVariables();
 		login();
-		bookRoom(0);
+		roomUrl = "http://roombooking.surrey.sfu.ca/edit_entry.php?area=6&room=43&hour=07&minute=00&year=2019&month=7&day=3";
+		int count = 0;
+		for(String user:users) {
+			changeCookies(user);
+			bookRoom(count);
+			count += 4;
+		}
 		
 	}
 
