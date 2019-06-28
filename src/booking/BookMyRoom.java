@@ -1,5 +1,6 @@
 package booking;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +49,6 @@ public class BookMyRoom {
 	
 	public static void fillArrayList() {
 		
-
 	}
 	
 	public static void openLogin() {
@@ -96,10 +96,18 @@ public class BookMyRoom {
 		driver.manage().addCookie(cookie);
 	}
 	
+	public static String getDate() {
+		Calendar date = Calendar.getInstance();
+		date.add(Calendar.DATE, 14);
+		String requiredDate = new SimpleDateFormat("yyyy/MM/dd").format(date.getTime());
+		return requiredDate;
+	}
+	
 	public static void bookRoom(int start) {
 		setRoomBookingVariables();
+		String requiredDate = getDate();
 		date.clear();
-		date.sendKeys("07/03/2019");
+		date.sendKeys(requiredDate);
 		description.sendKeys("group study");
 		new Select(startTime).selectByIndex(start);
 		if(start < 28) {
