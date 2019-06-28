@@ -2,7 +2,6 @@ package booking;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -20,6 +19,7 @@ public class BookMyRoom {
 	static WebElement loginButton, username, password, submit;
 	static WebElement date, description, startTime, endTime, saveButton;
 	static ArrayList<String> users= new ArrayList<String>();
+	static WebElement errorMessage;
 	
 	//Setting up drivers for different browsers
 	
@@ -43,13 +43,18 @@ public class BookMyRoom {
 	
 	public static void setupDriver() {
 		driver = open(browser);
-		driver.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
+		//driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
 		driver.get(url);
 	}
 	
+	//Will fill the array with usernames.
+	
 	public static void fillArrayList() {
-		
+
+
 	}
+	
+	//This function will open the login page.
 	
 	public static void openLogin() {
 		loginButton = driver.findElement(By.xpath("//*[@id=\"logon_box\"]/form/div/input[3]"));
@@ -67,6 +72,8 @@ public class BookMyRoom {
 		submit = driver.findElement(By.name("submit"));
 	}
 	
+	//This function will help login 
+	
 	public static void login() {	
 		//Fill in User name and Password
 		
@@ -78,13 +85,17 @@ public class BookMyRoom {
 		submit.click();
 	}
 	
-	public static void setRoomBookingVariables() {
+	public static boolean setRoomBookingVariables() {
 		driver.get(roomUrl);
+		if (driver.findElements(By.cssSelector("body > h1")).size() > 0) {
+			return false;
+		}
 		date = driver.findElement(By.id("start_datepicker"));
 		description = driver.findElement(By.name("name"));
 		startTime = driver.findElement(By.id("start_seconds6"));
 		endTime = driver.findElement(By.id("end_seconds6"));
 		saveButton = driver.findElement(By.name("save_button"));
+		return true;
 	}
 	
 	public static void changeCookies(String user) {
@@ -104,19 +115,21 @@ public class BookMyRoom {
 	}
 	
 	public static void bookRoom(int start) {
-		setRoomBookingVariables();
-		String requiredDate = getDate();
-		date.clear();
-		date.sendKeys(requiredDate);
-		description.sendKeys("group study");
-		new Select(startTime).selectByIndex(start);
-		if(start < 28) {
-			new Select(endTime).selectByIndex(start + 4);
-		} else {
-			new Select(endTime).selectByIndex(start + 3);
+		boolean bookingAvailable = setRoomBookingVariables();
+		if(bookingAvailable) {
+			String requiredDate = getDate();
+			date.clear();
+			date.sendKeys(requiredDate);
+			description.sendKeys("group study");
+			new Select(startTime).selectByIndex(start);
+			if(start < 28) {
+				new Select(endTime).selectByIndex(start + 4);
+			} else {
+				new Select(endTime).selectByIndex(start + 3);
+			}
+			
+			saveButton.submit();
 		}
-		
-		saveButton.submit();
 	}
 	
 	public static void main(String[] args) {
@@ -125,14 +138,16 @@ public class BookMyRoom {
 		openLogin();
 		setLoginVariables();
 		login();
-		roomUrl = "http://roombooking.surrey.sfu.ca/edit_entry.php?area=6&room=43&hour=07&minute=00&year=2019&month=7&day=3";
+		String requiredDate = getDate(); 
+		roomUrl = "http://roombooking.surrey.sfu.ca/edit_entry.php?area=6&room=43&hour=07&minute=00&year=" + 
+				requiredDate.substring(0, 4) + "&month=" + requiredDate.substring(5, 7) + "&day=" + requiredDate.substring(8);
 		int count = 0;
 		for(String user:users) {
 			changeCookies(user);
 			bookRoom(count);
 			count += 4;
 		}
-		
+		driver.close();
 	}
 
 }
